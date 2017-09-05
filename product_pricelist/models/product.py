@@ -25,6 +25,10 @@ class product_template(models.Model):
         inverse='dummy_inverse',
         string='Pricelists',
         )
+    pricelist_qty = fields.Float(
+        string="Cantidad",
+        default=1.0,
+    )
 
     @api.one
     def dummy_inverse(self):
@@ -36,8 +40,9 @@ class product_template(models.Model):
     @api.one
     # TODO use multi
     def get_pricelist_ids(self):
-        self.pricelist_ids = self.pricelist_ids.search([])
-
+        self.pricelist_ids = self.pricelist_ids.search([
+            ('type', '=', 'sale'),
+            ])
 
 # class product_product(models.Model):
 #     _inherit = 'product.product'

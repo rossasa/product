@@ -19,20 +19,54 @@ class product_pricelist(models.Model):
         digits=dp.get_precision('Product Price'),
         help='Price for product specified on the context',
         )
+    margin = fields.Float(
+        string='Margen(%)',
+        compute='_get_margin',
+        digits=dp.get_precision('Product Price'),
+        help='Margin for product specified on the context',
+        )
 
     @api.one
     # TODO make multi
     def _get_price(self):
         product_id = self._context.get('product_id', False)
         template_id = self._context.get('template_id', False)
+        product = self.env['product.product'].browse(product_id)
+        template = self.env['product.template'].browse(template_id)
         if product_id:
             price = self.env['product.product'].browse(
-                product_id).with_context(pricelist=self.id).price
+                product_id).with_context(
+                pricelist=self.id, quantity=product.pricelist_qty).price
             self.price = price
         elif template_id:
             price = self.env['product.template'].browse(
-                template_id).with_context(pricelist=self.id).price
+                template_id).with_context(
+                pricelist=self.id, quantity=template.pricelist_qty).price
             self.price = price
+
+    @api.one
+    # TODO make multi
+    def _get_margin(self):
+        product_id = self._context.get('product_id', False)
+        template_id = self._context.get('template_id', False)
+        product = self.env['product.product'].browse(product_id)
+        template = self.env['product.template'].browse(template_id)
+        if product_id:
+            price = self.env['product.product'].browse(
+                product_id).with_context(
+                pricelist=self.id, quantity=product.pricelist_qty).price
+            if product.standard_price > 0:
+                self.margin = 100*(1 - product.standard_price/price)
+            else:
+                self.margin = 100
+        elif template_id:
+            price = self.env['product.template'].browse(
+                template_id).with_context(
+                pricelist=self.id, quantity=template.pricelist_qty).price
+            if template.standard_price > 0:
+                self.margin = 100*(1 - template.standard_price/price)
+            else:
+                self.margin = 100
 
     @api.multi
     def action_related_pricelist_items(self):
