@@ -55,18 +55,18 @@ class product_pricelist(models.Model):
             price = self.env['product.product'].browse(
                 product_id).with_context(
                 pricelist=self.id, quantity=product.pricelist_qty).price
-            if product.standard_price > 0:
+            if price > 0:
                 self.margin = 100*(1 - product.standard_price/price)
             else:
-                self.margin = 100
+                self.margin = 0
         elif template_id:
             price = self.env['product.template'].browse(
                 template_id).with_context(
                 pricelist=self.id, quantity=template.pricelist_qty).price
-            if template.standard_price > 0:
+            if price > 0:
                 self.margin = 100*(1 - template.standard_price/price)
             else:
-                self.margin = 100
+                self.margin = 0
 
     @api.multi
     def action_related_pricelist_items(self):
