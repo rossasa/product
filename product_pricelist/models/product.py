@@ -5,6 +5,7 @@
 ##############################################################################
 from openerp import models, fields, api, _
 from openerp.exceptions import Warning
+import time
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -40,9 +41,19 @@ class product_template(models.Model):
     @api.one
     # TODO use multi
     def get_pricelist_ids(self):
-        self.pricelist_ids = self.pricelist_ids.search([
+        pricelists = self.pricelist_ids.search([
             ('type', '=', 'sale'),
             ])
+        date = self._context.get('date') or time.strftime('%Y-%m-%d')
+        date = date[0:10]
+        for pricelist in pricelists:
+            version = False
+            for v in pricelist.version_id:
+                if ((v.date_start is False) or (v.date_start <= date)) and ((v.date_end is False) or (v.date_end >= date)):
+                    version = v
+                    break
+            if version:
+                self.pricelist_ids |= pricelist
 
 # class product_product(models.Model):
 #     _inherit = 'product.product'
